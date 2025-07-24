@@ -38,6 +38,10 @@ pub enum Error {
 
     #[error("{0}")]
     Message(String),
+
+    #[error("Network request failed: {0}")]
+    Reqwest(#[from] ReqwestError),
+
 }
 
 impl From<&str> for Error {
