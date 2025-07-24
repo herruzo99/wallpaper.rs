@@ -1,37 +1,32 @@
-use std::{io, string::FromUtf8Error};
+// src/error.rs
+use std::error::Error as StdError;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
-#[non_exhaustive]
+pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[derive(Error, Debug)]
 pub enum Error {
-    #[error("I/O Error: {0}")]
-    IOError(#[from] io::Error),
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
 
-    #[error("Invalid UTF-8: {0}")]
-    InvalidUtf8(#[from] FromUtf8Error),
+    #[error("failed to parse ini file: {0}")]
+    Ini(#[from] ini::Error),
 
-    #[error("Invalid INI: {0}")]
-    InvalidIni(#[from] ini::ini::Error),
-
-    #[error("Enquote error: {0}")]
+    #[error("enquote error: {0}")]
     Enquote(#[from] enquote::Error),
 
-    #[error("{command} exited with status code {code}")]
-    CommandFailed { command: String, code: i32 },
+    #[error("string from UTF-8 error: {0}")]
+    FromUtf8(#[from] std::string::FromUtf8Error),
 
-    #[error("Could not find config directory")]
-    NoConfigDir,
+    #[error("HTTP request error: {0}")]
+    HttpRequest(#[from] reqwest::Error),
 
-    #[error("No {0} image found")]
-    NoImage(&'static str),
+    #[error("Could not find a valid cache directory on your system")]
+    NoCacheDir,
 
-    #[cfg(all(unix, not(target_os = "macos")))]
-    #[error("No desktops found")]
-    XfceNoDesktops,
+    #[error("Could not convert the temporary file path to a string")]
+    InvalidFilePath,
 
-    #[error("Unsupported Desktop")]
-    UnsupportedDesktop,
-
-    #[error("Invalid path")]
-    InvalidPath,
+    #[error("{0}")]
+    Other(Box<dyn StdError + Send + Sync>),
 }
